@@ -38,7 +38,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f7fa;
+            background-color: #5f5f5f;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -47,7 +47,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         .register-container {
-            background-color: #fff;
+            background-color:#f5f5f5;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -71,7 +71,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         .form-group input {
-            width: 100%;
+            width:94.5%;
             padding: 10px;
             margin-top: 5px;
             border: 1px solid #ddd;

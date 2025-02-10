@@ -1,87 +1,311 @@
 <?php
-include("../config/session.php");
-if ($_SESSION['role'] !== 'admin') {
-    header("Location: ../public/index.php");
-    exit();
+include '../config/database.php'; // ไฟล์เชื่อมต่อฐานข้อมูล
+
+// ตรวจสอบว่าตาราง finance มีอยู่หรือไม่
+$check_table_sql = "SHOW TABLES LIKE 'finance'";
+$check_result = $conn->query($check_table_sql);
+if ($check_result->num_rows == 0) {
+    die("Error: Table 'finance' does not exist. Please create the table first.");
 }
+
+// ดึงข้อมูลห้องพักจากฐานข้อมูล
+$sql = "SELECT id, room_number, status FROM rooms";
+$result = $conn->query($sql);
+
+// กำหนดเดือนปัจจุบันเริ่มต้น
+$current_month = date('m');
+if (isset($_GET['month'])) {
+    $current_month = $_GET['month'];
+}
+
+// ดึงข้อมูลรายรับ-รายจ่ายของเดือนที่เลือก
+$finance_sql = "SELECT MONTH(date) as month, SUM(income) as total_income, SUM(expense) as total_expense FROM finance WHERE MONTH(date) = ? GROUP BY MONTH(date)";
+$stmt = $conn->prepare($finance_sql);
+$stmt->bind_param("i", $current_month);
+$stmt->execute();
+$finance_result = $stmt->get_result();
+$finance_data = [];
+while ($row = $finance_result->fetch_assoc()) {
+    $finance_data[] = $row;
+}
+$stmt->close();
+
+// รายชื่อเดือน
+$months = [
+    "1" => "มกราคม",
+    "2" => "กุมภาพันธ์",
+    "3" => "มีนาคม",
+    "4" => "เมษายน",
+    "5" => "พฤษภาคม",
+    "6" => "มิถุนายน",
+    "7" => "กรกฎาคม",
+    "8" => "สิงหาคม",
+    "9" => "กันยายน",
+    "10" => "ตุลาคม",
+    "11" => "พฤศจิกายน",
+    "12" => "ธันวาคม"
+];
 ?>
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f7fa;
-            margin: 0;
-            padding: 0;
-        }
+    .sidebar {
+        height: 100vh;
+        width: 250px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: #343a40;
+        padding-top: 20px;
+    }
 
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+    .sidebar a {
+        padding: 10px;
+        text-decoration: none;
+        color: white;
+        display: block;
+    }
 
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 20px;
-        }
+    .sidebar a:hover {
+        background-color: #495057;
+    }
 
-        .dashboard-links {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+    .sidebar img {
+        display: block;
+        margin: 0 auto;
+        border-radius: 10px;
+    }
 
-        .dashboard-links a {
-            display: block;
-            background-color: #5b9bd5;
-            color: white;
-            padding: 12px 25px;
-            margin: 8px 0;
-            width: 200px;
-            text-align: center;
-            border-radius: 4px;
-            font-size: 16px;
-            text-decoration: none;
-        }
+    .content {
+        margin-left: 260px;
+        padding: 20px;
+    }
 
-        .dashboard-links a:hover {
-            background-color: #4a8ac7;
-        }
+    .footer {
+        margin-left: 190px;
+        padding: 16px;
+        background-color: #343a40;
+        color: white;
+        text-align: center;
+    }
 
-        .dashboard-links a:active {
-            background-color: #4178a0;
-        }
+    .footer a {
+        color: #5b9bd5;
+        text-decoration: none;
+    }
 
-        .logout-btn {
-            background-color: #e74c3c;
-        }
+    .footer a:hover {
+        text-decoration: underline;
+    }
 
-        .logout-btn:hover {
-            background-color: #c0392b;
-        }
+    .room-status {
+        display: grid;
+        grid-template-columns: repeat(8, 0.5fr);
+        /* 8 คอลัมน์ต่อแถว */
+        gap: 10px;
+        justify-items: center;
+    }
+
+    .room-status .room {
+        padding: 10px;
+        border-radius: 5px;
+        color: white;
+        text-align: center;
+        width: 100px;
+    }
+
+    .room-status .room.available {
+        background-color: #198754;
+    }
+
+    .room-status .room.occupied {
+        background-color: #dc3545;
+    }
+
+    .room-status .room.maintenance {
+        background-color: #ffc107;
+    }
+
+    .finance-summary {
+        display: flex;
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    .finance-summary .card {
+        flex: 1;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        background-color: #f8f9fa;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .finance-summary .card h3 {
+        margin-bottom: 10px;
+        font-size: 18px;
+    }
+
+    .finance-summary .card p {
+        font-size: 24px;
+        font-weight: bold;
+    }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <h1>ยินดีต้อนรับ Admin</h1>
-        <div class="dashboard-links">
-            <a href="add_user.php">Add User</a>
-            <a href="edit_user.php">Edit User</a>
-            <a href="manage_rooms.php">Manage Room</a>
-            <a href="manage_users.php">Manage User</a>
-            <a href="reports.php">Reports</a>
-            <a href="../public/logout.php" class="logout-btn">Logout</a>
-        </div>
+    <div class="sidebar">
+
+        <img src="../assets/images/home.png" alt="Logo" width="50">
+        <center style="color: white;">หอพักบ้านพุธชาติ</center>
+        <br>
+
+        <a href="dashboard.php">Dashboard</a>
+        <a href="manage_rooms.php">Manage Rooms</a>
+        <a href="manage_users.php">Manage Users</a>
+        <a href="reports.php">Report</a>
+        <a href="../public/logout.php">Logout</a>
     </div>
+
+    <div class="content">
+        <h2 class="mb-4">Admin Dashboard</h2>
+        <!-- ห้องพักสถานะ -->
+        <div class="d-flex  gap-1 my-3">
+            <div class="bg-success text-white p-3 rounded"></div>
+            <div class=" p-1 rounded">ห้องว่าง</div>
+            <div class="bg-danger text-white p-3 rounded"></div>
+            <div class=" p-1 rounded">มีผู้เช่า</div>
+            <div class="bg-warning text-white p-3 rounded"></div>
+            <div class=" p-1 rounded">ซ่อมบำรุง</div>
+        </div>
+
+
+        <!-- แสดงห้องพัก -->
+        <div class="room-status">
+            <?php while ($room = $result->fetch_assoc()) : ?>
+            <div class="room <?php
+                                    echo $room['status'] == 'available' ? 'available' : ($room['status'] == 'occupied' ? 'occupied' : 'maintenance');
+                                    ?>">
+                ห้อง <?php echo $room['room_number']; ?>
+            </div>
+            <?php endwhile; ?>
+        </div>
+        <br>
+        <!-- เลือกเดือน -->
+        <form method="GET" class="mb-3">
+            <label for="month">เลือกเดือน:</label>
+            <select name="month" id="month" class="form-select w-auto d-inline" onchange="this.form.submit()">
+                <?php foreach ($months as $num => $name) : ?>
+                <option value="<?php echo $num; ?>" <?php echo ($current_month == $num) ? 'selected' : ''; ?>>
+                    <?php echo $name; ?>
+                </option>
+                <?php endforeach; ?>
+            </select>
+        </form>
+
+        <!-- สรุปข้อมูลรายรับ-รายจ่าย -->
+        <div class="finance-summary">
+            <div class="card">
+                <h3>รายรับ</h3>
+                <p><?php echo number_format($finance_data[0]['total_income'] ?? 0, 2); ?> บาท</p>
+            </div>
+            <div class="card">
+                <h3>รายจ่าย</h3>
+                <p><?php echo number_format($finance_data[0]['total_expense'] ?? 0, 2); ?> บาท</p>
+            </div>
+        </div>
+        <br>
+        
+        <!-- กราฟรายรับ-รายจ่าย -->
+         <div>
+        <div class="row mb-5">
+            <div class="col-md-6">
+                <div style="height: 300px;">
+                    <h3 class="text-center">แผนภูมิแท่ง</h3>
+                    <canvas id="financeChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div style="height: 300px;">
+                    <h3 class="text-center">แผนภูมิวงกลม</h3>
+                    <canvas id="pieChart"></canvas>
+                </div>
+            </div>
+        </div>
+                </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>&copy; 2023 Your Company. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of
+                Service</a></p>
+    </div>
+
+    <script>
+    var financeData = <?php echo json_encode($finance_data); ?>;
+    var months = financeData.map(data => 'เดือน ' + data.month);
+    var income = financeData.map(data => data.total_income);
+    var expense = financeData.map(data => data.total_expense);
+
+    // แผนภูมิแท่ง
+    var ctx = document.getElementById('financeChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: months,
+            datasets: [{
+                    label: 'รายรับ',
+                    backgroundColor: 'green',
+                    data: income
+                },
+                {
+                    label: 'รายจ่าย',
+                    backgroundColor: 'red',
+                    data: expense
+                }
+            ]
+        },
+        options: {
+            maintainAspectRatio: false,
+            responsive: true
+        }
+    });
+
+    // แผนภูมิวงกลม
+    var pieCtx = document.getElementById('pieChart').getContext('2d');
+    new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+            labels: ['รายรับ', 'รายจ่าย'],
+            datasets: [{
+                data: [
+                    financeData[0]?.total_income ?? 0,
+                    financeData[0]?.total_expense ?? 0
+                ],
+                backgroundColor: ['green', 'red']
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    </script>
+
 </body>
 
 </html>

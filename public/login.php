@@ -52,7 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f7fa;
+            background-color:#5f5f5f;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -61,12 +61,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         .login-container {
-            background-color: #fff;
-            padding: 20px;
+            background-color: #f5f5f5;
+            padding: 40px;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             width: 100%;
-            max-width: 400px;
+            max-width: 600px;
         }
 
         h2 {
@@ -85,9 +85,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         .form-group input {
-            width: 100%;
+            width: 96.5%;
             padding: 10px;
-            margin-top: 5px;
+            margin-top: 7px;
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 16px;
@@ -147,6 +147,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <label for="password">รหัสผ่าน:</label>
                 <input type="password" name="password" id="password" required>
             </div>
+            <br>
             <button type="submit">เข้าสู่ระบบ</button>
         </form>
         <p>ยังไม่มีบัญชี? <a href="register.php">สมัครสมาชิก</a></p>
