@@ -1,28 +1,29 @@
 <?php
 include("../config/session.php");
 include("../config/database.php");
+
 // ตรวจสอบว่าผู้ใช้ล็อกอินอยู่หรือไม่
 if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
 
     // ดึงข้อมูลผู้ใช้จากฐานข้อมูล
-    $user_sql = "SELECT full_name FROM users WHERE id = ?";
-    $stmt = $conn->prepare($user_sql);
+    $stmt = $conn->prepare("SELECT full_name FROM users WHERE id = ?");
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $user_result = $stmt->get_result();
     $user_data = $user_result->fetch_assoc();
-    $full_name = $user_data['full_name'] ?? 'Guest'; // หากไม่มีข้อมูลให้แสดง 'Guest'
+    $full_name = $user_data['full_name'] ?? 'Guest';
     $stmt->close();
 } else {
-    $full_name = 'Guest'; // หากไม่ได้ล็อกอินให้แสดง 'Guest'
+    $full_name = 'Guest';
 }
+
 // ตรวจสอบบทบาทของผู้ใช้
-$user_role = $_SESSION['role']; // 'admin' หรือ 'tenant'
+$user_role = $_SESSION['role'];
 $tenant_id = $_SESSION['user_id'];
 
-// Admin: ลบคำขอแจ้งซ่อม
-if ($user_role == 'admin' && isset($_GET['delete_id'])) {
+// Admin และ Staff: ลบคำขอแจ้งซ่อม
+if (($user_role == 'admin' || $user_role == 'staff') && isset($_GET['delete_id'])) {
     $delete_id = $_GET['delete_id'];
     $conn->query("DELETE FROM maintenance_requests WHERE id = $delete_id");
     header("Location: reports.php");
@@ -38,8 +39,8 @@ if ($user_role == 'tenant' && isset($_POST['submit_request'])) {
     exit;
 }
 
-// Admin: อัปเดตสถานะ
-if ($user_role == 'admin' && isset($_POST['update_status'])) {
+// Admin และ Staff: อัปเดตสถานะ
+if (($user_role == 'admin' || $user_role == 'staff') && isset($_POST['update_status'])) {
     $request_id = $_POST['request_id'];
     $status = $_POST['status'];
     $assigned_staff_id = $_POST['assigned_staff_id'];
@@ -50,17 +51,8 @@ if ($user_role == 'admin' && isset($_POST['update_status'])) {
 
 // ดึงข้อมูลรายการแจ้งซ่อม
 $requests = $conn->query("SELECT m.*, u.full_name, r.room_number FROM maintenance_requests m JOIN users u ON m.tenant_id = u.id JOIN rooms r ON m.room_id = r.id");
-// ดึงข้อมูลผู้ใช้ทั้งหมดจากฐานข้อมูล
-$result = $conn->query("SELECT id, username, full_name, phone, email, role FROM users");
-
-// ลบผู้ใช้
-if (isset($_GET["delete"])) {
-    $user_id = $_GET["delete"];
-    $conn->query("DELETE FROM users WHERE id = $user_id");
-    header("Location: reports.php");
-    exit();
-}
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -208,7 +200,8 @@ if (isset($_GET["delete"])) {
         <?php endif; ?>
 
     </div>
-    <br><br><br><br><br><br><br><br> <br><br><br><br><br><br><br><br><br>
+    
+    <br><br><br><br><br><br><br>
 
 
 

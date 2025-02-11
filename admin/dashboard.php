@@ -1,5 +1,5 @@
 <?php
-session_start(); // เริ่ม session
+include '../config/session.php';// เริ่ม session
 include '../config/database.php'; // ไฟล์เชื่อมต่อฐานข้อมูล
 
 // ตรวจสอบว่าผู้ใช้ล็อกอินอยู่หรือไม่
@@ -73,6 +73,8 @@ $months = [
     <title>Admin Dashboard</title>
     <link rel="icon" type="image/png" href="../assets/images/home.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
     .sidebar {
@@ -108,7 +110,8 @@ $months = [
     }
 
     .footer {
-        margin-left: 190px;
+        width: 100%;
+
         padding: 16px;
         background-color: #343a40;
         color: white;
@@ -175,24 +178,61 @@ $months = [
         font-size: 24px;
         font-weight: bold;
     }
+
+    @media (max-width: 768px) {
+        .sidebar {
+            width: 100%;
+            height: auto;
+            position: relative;
+        }
+
+        .sidebar a {
+            text-align: center;
+            padding: 10px;
+        }
+
+        .content {
+            margin-left: 0;
+            padding: 10px;
+        }
+
+        .room-status {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .finance-summary {
+            flex-direction: column;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .room-status {
+            grid-template-columns: repeat(1, 1fr);
+        }
+
+        .finance-summary .card {
+            margin-bottom: 10px;
+        }
+    }
     </style>
 </head>
 
 <body>
+
     <div class="sidebar">
         <img src="../assets/images/home.png" alt="Logo" width="50">
         <center style="color: white;">หอพักบ้านพุธชาติ</center>
         <center style="color: white;"><?php echo htmlspecialchars($full_name); ?></center>
-        <a href="dashboard.php">Dashboard</a>
-        <a href="manage_rooms.php">Manage Rooms</a>
-        <a href="manage_users.php">Manage Users</a>
-        <a href="manage_bills.php">Manage Bills</a>
-        <a href="reports.php">Report</a>
-        <a href="../public/logout.php">Logout</a>
+        <a href="dashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <a href="manage_rooms.php"><i class="fas fa-bed"></i> Manage Rooms</a>
+        <a href="manage_users.php"><i class="fas fa-users"></i> Manage Users</a>
+        <a href="manage_bills.php"><i class="fas fa-file-invoice-dollar"></i> Manage Bills</a>
+        <a href="reports.php"><i class="fas fa-chart-line"></i> Report</a>
+        <a href="../public/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
-
+            
     <div class="content">
-        <h2 class="mb-4">Admin Dashboard</h2>
+    <h2>Admin Dashboard</h2>
         <!-- ห้องพักสถานะ -->
         <div class="d-flex  gap-1 my-3">
             <div class="bg-success text-white p-3 rounded"></div>
@@ -319,6 +359,51 @@ $months = [
                 }
             }
         }
+    });
+    var options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    };
+
+    var ctx = document.getElementById('financeChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: months,
+            datasets: [{
+                    label: 'รายรับ',
+                    backgroundColor: 'green',
+                    data: income
+                },
+                {
+                    label: 'รายจ่าย',
+                    backgroundColor: 'red',
+                    data: expense
+                }
+            ]
+        },
+        options: options
+    });
+
+    var pieCtx = document.getElementById('pieChart').getContext('2d');
+    new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+            labels: ['รายรับ', 'รายจ่าย'],
+            datasets: [{
+                data: [
+                    financeData[0]?.total_income ?? 0,
+                    financeData[0]?.total_expense ?? 0
+                ],
+                backgroundColor: ['green', 'red']
+            }]
+        },
+        options: options
     });
     </script>
 

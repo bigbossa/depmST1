@@ -157,9 +157,6 @@ if ($user_role == 'tenant') {
         <center style="color: white;">หอพักบ้านพุธชาติ</center>
         <br>
         <a href="dashboard.php">Dashboard</a>
-        <a href="manage_rooms.php">Manage Rooms</a>
-        <a href="manage_users.php">Manage Users</a>
-        <a href="manage_bills.php">Manage Bills</a>
         <a href="reports.php">Report</a>
         <a href="../public/logout.php">Logout</a>
     </div>
