@@ -7,7 +7,22 @@ if ($_SESSION['role'] != 'admin') {
     header("Location: ../index.php");
     exit();
 }
+// ตรวจสอบว่าผู้ใช้ล็อกอินอยู่หรือไม่
+if (isset($_SESSION['user_id'])) {
+    $user_id = $_SESSION['user_id'];
 
+    // ดึงข้อมูลผู้ใช้จากฐานข้อมูล
+    $user_sql = "SELECT full_name FROM users WHERE id = ?";
+    $stmt = $conn->prepare($user_sql);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $user_result = $stmt->get_result();
+    $user_data = $user_result->fetch_assoc();
+    $full_name = $user_data['full_name'] ?? 'Guest'; // หากไม่มีข้อมูลให้แสดง 'Guest'
+    $stmt->close();
+} else {
+    $full_name = 'Guest'; // หากไม่ได้ล็อกอินให้แสดง 'Guest'
+}
 // ตรวจสอบว่าได้ส่ง id ห้องพักมาไหม
 if (!isset($_GET['id'])) {
     header("Location: manage_rooms.php");
@@ -55,67 +70,68 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>แก้ไขข้อมูลห้องพัก</title>
+    <link rel="icon" type="image/png" href="../assets/images/home.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        html,
-        body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-        }
+    html,
+    body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+    }
 
-        .sidebar {
-            height: 100vh;
-            width: 250px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            background-color: #343a40;
-            padding-top: 20px;
-            color: white;
-        }
+    .sidebar {
+        height: 100vh;
+        width: 250px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: #343a40;
+        padding-top: 20px;
+        color: white;
+    }
 
-        .sidebar a {
-            padding: 10px;
-            text-decoration: none;
-            color: white;
-            display: block;
-        }
+    .sidebar a {
+        padding: 10px;
+        text-decoration: none;
+        color: white;
+        display: block;
+    }
 
-        .sidebar a:hover {
-            background-color: #495057;
-        }
+    .sidebar a:hover {
+        background-color: #495057;
+    }
 
-        .sidebar img {
-            display: block;
-            margin: 0 auto;
-            border-radius: 10px;
-        }
+    .sidebar img {
+        display: block;
+        margin: 0 auto;
+        border-radius: 10px;
+    }
 
-        .content {
-            margin-left: 260px;
-            padding: 20px;
-            flex: 1;
-        }
+    .content {
+        margin-left: 260px;
+        padding: 20px;
+        flex: 1;
+    }
 
-        .footer {
-            padding: 16px;
-            background-color: #343a40;
-            color: white;
-            text-align: center;
-            margin-top: auto;
-        }
+    .footer {
+        padding: 16px;
+        background-color: #343a40;
+        color: white;
+        text-align: center;
+        margin-top: auto;
+    }
 
-        .footer a {
-            color: #5b9bd5;
-            text-decoration: none;
-        }
+    .footer a {
+        color: #5b9bd5;
+        text-decoration: none;
+    }
 
-        .footer a:hover {
-            text-decoration: underline;
-        }
+    .footer a:hover {
+        text-decoration: underline;
+    }
     </style>
 </head>
 
@@ -123,11 +139,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <!-- Sidebar -->
     <div class="sidebar">
         <img src="../assets/images/home.png" alt="Logo" width="50">
-        <center>หอพักบ้านพุธชาติ</center>
-        <br>
+        <center style="color: white;">หอพักบ้านพุธชาติ</center>
+        <center style="color: white;"><?php echo htmlspecialchars($full_name); ?></center>
         <a href="dashboard.php">Dashboard</a>
         <a href="manage_rooms.php">Manage Rooms</a>
         <a href="manage_users.php">Manage Users</a>
+        <a href="manage_bills.php">Manage Bills</a>
         <a href="reports.php">Report</a>
         <a href="../public/logout.php">Logout</a>
     </div>
@@ -141,7 +158,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <form method="post" class="mb-4">
             <div class="mb-3">
                 <label for="room_number" class="form-label">หมายเลขห้อง:</label>
-                <input type="text" name="room_number" id="room_number" class="form-control" value="<?= $room['room_number'] ?>" required readonly>
+                <input type="text" name="room_number" id="room_number" class="form-control"
+                    value="<?= $room['room_number'] ?>" required readonly>
             </div>
 
             <div class="mb-3">
@@ -155,7 +173,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             <div class="mb-3">
                 <label for="price" class="form-label">ราคา:</label>
-                <input type="number" step="0.01" name="price" id="price" class="form-control" value="<?= $room['price'] ?>" required>
+                <input type="number" step="0.01" name="price" id="price" class="form-control"
+                    value="<?= $room['price'] ?>" required>
             </div>
 
             <div class="mb-3">
@@ -172,24 +191,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <select name="tenant_id" id="tenant_id" class="form-select">
                     <option value="">ไม่มีผู้เช่า</option>
                     <?php foreach ($users as $user): ?>
-                        <option value="<?= $user['id'] ?>" <?= $room['tenant_id'] == $user['id'] ? 'selected' : '' ?>>
-                            <?= $user['username'] ?>
-                        </option>
+                    <option value="<?= $user['id'] ?>" <?= $room['tenant_id'] == $user['id'] ? 'selected' : '' ?>>
+                        <?= $user['username'] ?>
+                    </option>
                     <?php endforeach; ?>
                 </select>
             </div>
 
             <button type="submit" class="btn btn-primary">บันทึกการเปลี่ยนแปลง</button>
             <button class="btn btn-warning float-end">
-            <a href="manage_users.php" style="color: white; text-decoration: none;">กลับไปที่หน้าจัดการผู้ใช้งาน</a>
+                <a href="manage_users.php" style="color: white; text-decoration: none;">กลับไปที่หน้าจัดการผู้ใช้งาน</a>
         </form>
 
-     
+
     </div>
 
     <!-- Footer -->
     <div class="footer">
-        <p>&copy; 2023 Your Company. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of Service</a></p>
+        <p>&copy; 2023 Your Company. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of
+                Service</a></p>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

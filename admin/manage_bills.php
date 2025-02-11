@@ -1,8 +1,7 @@
 <?php
-session_start(); // เริ่ม session
-include '../config/database.php'; // ไฟล์เชื่อมต่อฐานข้อมูล
+include("../config/session.php");
+include("../config/database.php");// ไฟล์เชื่อมต่อฐานข้อมูล
 
-// ตรวจสอบว่าผู้ใช้ล็อกอินอยู่หรือไม่
 if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
 
@@ -14,39 +13,27 @@ if (isset($_SESSION['user_id'])) {
     $user_result = $stmt->get_result();
     $user_data = $user_result->fetch_assoc();
     $full_name = $user_data['full_name'] ?? 'Guest'; // หากไม่มีข้อมูลให้แสดง 'Guest'
+    $_SESSION['full_name'] = $full_name; // อัปเดตค่า session
     $stmt->close();
 } else {
-    $full_name = 'Guest'; // หากไม่ได้ล็อกอินให้แสดง 'Guest'
+    $full_name = 'Guest';
 }
 
-// ตรวจสอบว่าตาราง finance มีอยู่หรือไม่
-$check_table_sql = "SHOW TABLES LIKE 'finance'";
-$check_result = $conn->query($check_table_sql);
-if ($check_result->num_rows == 0) {
-    die("Error: Table 'finance' does not exist. Please create the table first.");
-}
-
-// ดึงข้อมูลห้องพักจากฐานข้อมูล
-$sql = "SELECT id, room_number, status FROM rooms";
-$result = $conn->query($sql);
-
-// กำหนดเดือนปัจจุบันเริ่มต้น
-$current_month = date('m');
-if (isset($_GET['month'])) {
-    $current_month = $_GET['month'];
-}
-
-// ดึงข้อมูลรายรับ-รายจ่ายของเดือนที่เลือก
-$finance_sql = "SELECT MONTH(date) as month, SUM(income) as total_income, SUM(expense) as total_expense FROM finance WHERE MONTH(date) = ? GROUP BY MONTH(date)";
-$stmt = $conn->prepare($finance_sql);
-$stmt->bind_param("i", $current_month);
-$stmt->execute();
-$finance_result = $stmt->get_result();
+// ดึงข้อมูลรายรับ-รายจ่ายแต่ละเดือน
+$finance_sql = "SELECT MONTH(date) as month, YEAR(date) as year, SUM(income) as total_income, SUM(expense) as total_expense FROM finance GROUP BY YEAR(date), MONTH(date) ORDER BY YEAR(date), MONTH(date)";
+$finance_result = $conn->query($finance_sql);
 $finance_data = [];
 while ($row = $finance_result->fetch_assoc()) {
     $finance_data[] = $row;
 }
-$stmt->close();
+
+// คำนวณยอดรวมทั้งปี
+$total_income_year = 0;
+$total_expense_year = 0;
+foreach ($finance_data as $data) {
+    $total_income_year += $data['total_income'];
+    $total_expense_year += $data['total_expense'];
+}
 
 // รายชื่อเดือน
 $months = [
@@ -70,7 +57,7 @@ $months = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Manage Bills</title>
     <link rel="icon" type="image/png" href="../assets/images/home.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -124,33 +111,6 @@ $months = [
         text-decoration: underline;
     }
 
-    .room-status {
-        display: grid;
-        grid-template-columns: repeat(8, 0.5fr);
-        gap: 10px;
-        justify-items: center;
-    }
-
-    .room-status .room {
-        padding: 10px;
-        border-radius: 5px;
-        color: white;
-        text-align: center;
-        width: 100px;
-    }
-
-    .room-status .room.available {
-        background-color: #198754;
-    }
-
-    .room-status .room.occupied {
-        background-color: #dc3545;
-    }
-
-    .room-status .room.maintenance {
-        background-color: #ffc107;
-    }
-
     .finance-summary {
         display: flex;
         gap: 20px;
@@ -182,7 +142,7 @@ $months = [
     <div class="sidebar">
         <img src="../assets/images/home.png" alt="Logo" width="50">
         <center style="color: white;">หอพักบ้านพุธชาติ</center>
-        <center style="color: white;"><?php echo htmlspecialchars($full_name); ?></center>
+        <center style="color: white;"><?php echo htmlspecialchars($_SESSION['full_name'] ?? 'Guest'); ?></center>
         <a href="dashboard.php">Dashboard</a>
         <a href="manage_rooms.php">Manage Rooms</a>
         <a href="manage_users.php">Manage Users</a>
@@ -192,66 +152,57 @@ $months = [
     </div>
 
     <div class="content">
-        <h2 class="mb-4">Admin Dashboard</h2>
-        <!-- ห้องพักสถานะ -->
-        <div class="d-flex  gap-1 my-3">
-            <div class="bg-success text-white p-3 rounded"></div>
-            <div class=" p-1 rounded">ห้องว่าง</div>
-            <div class="bg-danger text-white p-3 rounded"></div>
-            <div class=" p-1 rounded">มีผู้เช่า</div>
-            <div class="bg-warning text-white p-3 rounded"></div>
-            <div class=" p-1 rounded">ซ่อมบำรุง</div>
-        </div>
+        <h2 class="mb-4">Manage Bills</h2>
 
-        <!-- แสดงห้องพัก -->
-        <div class="room-status">
-            <?php while ($room = $result->fetch_assoc()) : ?>
-            <div class="room <?php
-                                    echo $room['status'] == 'available' ? 'available' : ($room['status'] == 'occupied' ? 'occupied' : 'maintenance');
-                                    ?>">
-                ห้อง <?php echo $room['room_number']; ?>
-            </div>
-            <?php endwhile; ?>
-        </div>
-        <br>
-        <!-- เลือกเดือน -->
-        <form method="GET" class="mb-3">
-            <label for="month">เลือกเดือน:</label>
-            <select name="month" id="month" class="form-select w-auto d-inline" onchange="this.form.submit()">
-                <?php foreach ($months as $num => $name) : ?>
-                <option value="<?php echo $num; ?>" <?php echo ($current_month == $num) ? 'selected' : ''; ?>>
-                    <?php echo $name; ?>
-                </option>
-                <?php endforeach; ?>
-            </select>
-        </form>
-
-        <!-- สรุปข้อมูลรายรับ-รายจ่าย -->
+        <!-- สรุปยอดรวมทั้งปี -->
         <div class="finance-summary">
             <div class="card">
-                <h3>รายรับ</h3>
-                <p><?php echo number_format($finance_data[0]['total_income'] ?? 0, 2); ?> บาท</p>
+                <h3>รายรับทั้งปี</h3>
+                <p><?php echo number_format($total_income_year, 2); ?> บาท</p>
             </div>
             <div class="card">
-                <h3>รายจ่าย</h3>
-                <p><?php echo number_format($finance_data[0]['total_expense'] ?? 0, 2); ?> บาท</p>
+                <h3>รายจ่ายทั้งปี</h3>
+                <p><?php echo number_format($total_expense_year, 2); ?> บาท</p>
             </div>
         </div>
         <br>
 
-        <!-- กราฟรายรับ-รายจ่าย -->
+        <!-- ตารางแสดงรายรับ-รายจ่ายแต่ละเดือน -->
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>เดือน</th>
+                    <th>ปี</th>
+                    <th>รายรับ</th>
+                    <th>รายจ่าย</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($finance_data as $data) : ?>
+                <tr>
+                    <td><?php echo $months[$data['month']]; ?></td>
+                    <td><?php echo $data['year']; ?></td>
+                    <td><?php echo number_format($data['total_income'], 2); ?> บาท</td>
+                    <td><?php echo number_format($data['total_expense'], 2); ?> บาท</td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+        <br>
+
+        <!-- กราฟรายรับ-รายจ่ายทั้งปี -->
         <div>
             <div class="row mb-5">
                 <div class="col-md-6">
                     <div style="height: 300px;">
-                        <h3 class="text-center">แผนภูมิแท่ง</h3>
+                        <h3 class="text-center">แผนภูมิแท่งรายรับ-รายจ่าย</h3>
                         <canvas id="financeChart"></canvas>
                     </div>
                 </div>
 
                 <div class="col-md-6">
                     <div style="height: 300px;">
-                        <h3 class="text-center">แผนภูมิวงกลม</h3>
+                        <h3 class="text-center">แผนภูมิวงกลมรายรับ-รายจ่าย</h3>
                         <canvas id="pieChart"></canvas>
                     </div>
                 </div>
@@ -268,7 +219,7 @@ $months = [
 
     <script>
     var financeData = <?php echo json_encode($finance_data); ?>;
-    var months = financeData.map(data => 'เดือน ' + data.month);
+    var months = financeData.map(data => 'เดือน ' + data.month + ' ' + data.year);
     var income = financeData.map(data => data.total_income);
     var expense = financeData.map(data => data.total_expense);
 
@@ -304,8 +255,8 @@ $months = [
             labels: ['รายรับ', 'รายจ่าย'],
             datasets: [{
                 data: [
-                    financeData[0]?.total_income ?? 0,
-                    financeData[0]?.total_expense ?? 0
+                    <?php echo $total_income_year; ?>,
+                    <?php echo $total_expense_year; ?>
                 ],
                 backgroundColor: ['green', 'red']
             }]

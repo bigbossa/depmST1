@@ -6,3 +6,5 @@ if ($_SESSION['role'] !== 'tenant') {
 }
 ?>
 <h1>ยินดีต้อนรับ Tenant</h1>
+<br>
+<a href="reports.php">Reports</a>
