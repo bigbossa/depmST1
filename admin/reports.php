@@ -68,7 +68,11 @@ if (isset($_GET["delete"])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>จัดการผู้ใช้</title>
+    <link rel="icon" type="image/png" href="../assets/images/home.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
     .sidebar {
         height: 100vh;
@@ -123,18 +127,9 @@ if (isset($_GET["delete"])) {
 
 <body>
     <!-- Sidebar -->
-    <div class="sidebar">
-
-        <img src="../assets/images/home.png" alt="Logo" width="50">
-        <center style="color: white;">หอพักบ้านพุธชาติ</center>
-        <center style="color: white;"><?php echo htmlspecialchars($full_name); ?></center>
-        <a href="dashboard.php">Dashboard</a>
-        <a href="manage_rooms.php">Manage Rooms</a>
-        <a href="manage_users.php">Manage Users</a>
-        <a href="manage_bills.php">Manage Bills</a>
-        <a href="reports.php">Report</a>
-        <a href="../public/logout.php">Logout</a>
-    </div>
+    <?php
+    include "../assets/assets/admin_sidebar.php";
+    ?>
 
 
     <!-- Content -->
@@ -191,7 +186,7 @@ if (isset($_GET["delete"])) {
                             <option value="completed" <?= $row['status'] == 'completed' ? 'selected' : '' ?>>Completed
                             </option>
                         </select>
-                        <select name="assigned_staff_id" class="form-control mt-2">
+                        <select name="assigned_staff_id" class="form-control mt-2" required>
                             <option value="">เลือกผู้ดูแล</option>
                             <option value="1" <?= $row['assigned_staff_id'] == 1 ? 'selected' : '' ?>>Admin</option>
                             <option value="2" <?= $row['assigned_staff_id'] == 2 ? 'selected' : '' ?>>Staff</option>

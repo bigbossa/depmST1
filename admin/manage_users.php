@@ -3,7 +3,7 @@ include("../config/session.php");
 include("../config/database.php");
 
 // ดึงข้อมูลผู้ใช้ทั้งหมดจากฐานข้อมูล
-$result = $conn->query("SELECT id, username, full_name, phone, email, role FROM users");
+$result = $conn->query("SELECT id, username, full_name, phone, email, role, IDCard, img, charter FROM users");
 
 // ลบผู้ใช้
 if (isset($_GET["delete"])) {
@@ -38,6 +38,9 @@ if (isset($_SESSION['user_id'])) {
     <title>จัดการผู้ใช้</title>
     <link rel="icon" type="image/png" href="../assets/images/home.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
     .sidebar {
         height: 100vh;
@@ -92,18 +95,9 @@ if (isset($_SESSION['user_id'])) {
 
 <body>
     <!-- Sidebar -->
-    <div class="sidebar">
-        <img src="../assets/images/home.png" alt="Logo" width="50">
-        <center style="color: white;">หอพักบ้านพุธชาติ</center>
-        <center style="color: white;"><?php echo htmlspecialchars($full_name); ?></center>
-        <a href="dashboard.php">Dashboard</a>
-        <a href="manage_rooms.php">Manage Rooms</a>
-        <a href="manage_users.php">Manage Users</a>
-        <a href="manage_bills.php">Manage Bills</a>
-        <a href="reports.php">Report</a>
-        <a href="../public/logout.php">Logout</a>
-    </div>
-
+    <?php
+    include "../assets/assets/admin_sidebar.php";
+    ?>
 
     <!-- Content -->
     <div class="content">
@@ -112,26 +106,92 @@ if (isset($_SESSION['user_id'])) {
         <table class="table table-bordered">
             <thead>
                 <tr>
+                    <th>รูปประจำตัว</th>
                     <th>ชื่อผู้ใช้</th>
                     <th>ชื่อ-นามสกุล</th>
+                    <th>เลขบัตรประชาชน</th>
                     <th>เบอร์โทร</th>
                     <th>Email</th>
                     <th>บทบาท</th>
+                    <th>สัญญาเช่า</th>
                     <th>การกระทำ</th>
                 </tr>
             </thead>
             <tbody>
                 <?php while ($row = $result->fetch_assoc()) { ?>
                 <tr>
+                    <td>
+                        <?php if (!empty($row["img"])): ?>
+                        <img src="../assets/Data/img/<?= $row["img"] ?>" alt="รูปประจำตัว"
+                            style="width: 50px; height: 50px; object-fit: cover;">
+                        <?php else: ?>
+                        <img src="../assets/images/home.png" alt="รูปเริ่มต้น"
+                            style="width: 50px; height: 50px; object-fit: cover;">
+                        <?php endif; ?>
+                    </td>
                     <td><?= $row["username"] ?></td>
                     <td><?= $row["full_name"] ?></td>
+                    <td><?= $row["IDCard"] ?></td>
                     <td><?= $row["phone"] ?></td>
                     <td><?= $row["email"] ?></td>
                     <td><?= ucfirst($row["role"]) ?></td>
                     <td>
+                        <?php if (!empty($row["charter"]) && $row["charter"] != ""): ?>
+                        <a href="../assets/Data/file_Charter/<?= $row["charter"] ?>" download
+                            class="btn btn-info btn-sm">
+                            <i class="fas fa-file-download"></i> ดาวน์โหลด สัญญาเช่า
+                        </a>
+                        <?php else: ?>
+                        <span class="text-muted">ไม่มีไฟล์</span>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                            data-bs-target="#viewModal<?= $row["id"] ?>">ดู</button> |
                         <a href="edit_user.php?id=<?= $row["id"] ?>" class="btn btn-warning btn-sm">แก้ไข</a> |
                         <a href="manage_users.php?delete=<?= $row["id"] ?>" class="btn btn-danger btn-sm"
                             onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบ?');">ลบ</a>
+
+                        <!-- Modal สำหรับดูข้อมูล -->
+                        <div class="modal fade" id="viewModal<?= $row["id"] ?>" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">ข้อมูลผู้ใช้: <?= $row["full_name"] ?></h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="text-center mb-3">
+                                            <?php if (!empty($row["img"])): ?>
+                                            <img src="../assets/Data/img/<?= $row["img"] ?>" alt="รูปประจำตัว"
+                                                style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%;">
+                                            <?php else: ?>
+                                            <img src="../assets/images/home.png" alt="รูปเริ่มต้น"
+                                                style="width: 150px; height: 150px; object-fit: cover; border-radius: 50%;">
+                                            <?php endif; ?>
+                                        </div>
+                                        <p><strong>ชื่อผู้ใช้:</strong> <?= $row["username"] ?></p>
+                                        <p><strong>ชื่อ-นามสกุล:</strong> <?= $row["full_name"] ?></p>
+                                        <p><strong>เลขบัตรประชาชน:</strong> <?= $row["IDCard"] ?></p>
+                                        <p><strong>เบอร์โทร:</strong> <?= $row["phone"] ?></p>
+                                        <p><strong>Email:</strong> <?= $row["email"] ?></p>
+                                        <p><strong>บทบาท:</strong> <?= ucfirst($row["role"]) ?></p>
+                                        <?php if (!empty($row["charter"]) && $row["charter"] != ""): ?>
+                                        <p><strong>สัญญาเช่า:</strong>
+                                            <a href="../assets/Data/file_Charter/<?= $row["charter"] ?>" download>
+                                                <i class="fas fa-file-download"></i> ดาวน์โหลดสัญญาเช่า
+                                            </a>
+                                        </p>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">ปิด</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </td>
                 </tr>
                 <?php } ?>
@@ -140,13 +200,14 @@ if (isset($_SESSION['user_id'])) {
     </div>
     <br><br><br><br><br><br><br><br> <br><br><br><br>
 
-
-
     <!-- Footer -->
     <div class="footer">
         <p>&copy; 2023 Your Company. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of
                 Service</a></p>
     </div>
+
+    <!-- เพิ่ม Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

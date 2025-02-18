@@ -7,22 +7,113 @@ if (!isset($_GET["id"])) {
     exit();
 }
 
+// ตรวจสอบว่าผู้ใช้ล็อกอินอยู่หรือไม่
+if (isset($_SESSION['user_id'])) {
+    $user_id = $_SESSION['user_id'];
+
+    // ดึงข้อมูลผู้ใช้จากฐานข้อมูล
+    $user_sql = "SELECT full_name FROM users WHERE id = ?";
+    $stmt = $conn->prepare($user_sql);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $user_result = $stmt->get_result();
+    $user_data = $user_result->fetch_assoc();
+    $full_name = $user_data['full_name'] ?? 'Guest'; // หากไม่มีข้อมูลให้แสดง 'Guest'
+    $stmt->close();
+} else {
+    $full_name = 'Guest'; // หากไม่ได้ล็อกอินให้แสดง 'Guest'
+}
+
 $user_id = $_GET["id"];
 $result = $conn->query("SELECT * FROM users WHERE id = $user_id");
 $user = $result->fetch_assoc();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $full_name = $_POST["full_name"];
-    $phone = $_POST["phone"];
-    $email = $_POST["email"];
-    $role = $_POST["role"];
+    // Initialize array to store fields that have changed
+    $updates = array();
+    $types = "";
+    $params = array();
 
-    $stmt = $conn->prepare("UPDATE users SET full_name = ?, phone = ?, email = ?, role = ? WHERE id = ?");
-    $stmt->bind_param("ssssi", $full_name, $phone, $email, $role, $user_id);
-    $stmt->execute();
+    // Check each field for changes
+    if ($_POST["full_name"] != $user['full_name']) {
+        $updates[] = "full_name = ?";
+        $types .= "s";
+        $params[] = $_POST["full_name"];
+    }
 
-    header("Location: manage_users.php");
-    exit();
+    if ($_POST["phone"] != $user['phone']) {
+        $updates[] = "phone = ?";
+        $types .= "s";
+        $params[] = $_POST["phone"];
+    }
+
+    if ($_POST["email"] != $user['email']) {
+        $updates[] = "email = ?";
+        $types .= "s";
+        $params[] = $_POST["email"];
+    }
+
+    if ($_POST["role"] != $user['role']) {
+        $updates[] = "role = ?";
+        $types .= "s";
+        $params[] = $_POST["role"];
+    }
+
+    if ($_POST["IDCard"] != $user['IDCard']) {
+        $updates[] = "IDCard = ?";
+        $types .= "s";
+        $params[] = $_POST["IDCard"];
+    }
+
+    // Handle image file upload
+    if (isset($_FILES['img']) && $_FILES['img']['error'] == 0) {
+        $img_file = $_FILES['img']['name'];
+        $img_tmp = $_FILES['img']['tmp_name'];
+        $img_destination = "../assets/Data/img/" . $img_file;
+
+        if (move_uploaded_file($img_tmp, $img_destination)) {
+            $updates[] = "img = ?";
+            $types .= "s";
+            $params[] = $img_file;
+        }
+    }
+
+    // Handle charter file upload only if new file is selected
+    if (isset($_FILES['charter']) && $_FILES['charter']['error'] == 0) {
+        $charter_file = $_FILES['charter']['name'];
+        $charter_tmp = $_FILES['charter']['tmp_name'];
+        $charter_destination = "../assets/Data/file_Charter/" . $charter_file;
+
+        if (move_uploaded_file($charter_tmp, $charter_destination)) {
+            $updates[] = "charter = ?";
+            $types .= "s";
+            $params[] = $charter_file;
+        }
+    }
+
+    // Execute update query if there are changes
+    if (!empty($updates)) {
+        $sql = "UPDATE users SET " . implode(", ", $updates) . " WHERE id = ?";
+        $types .= "i"; // Add type for user_id
+        $params[] = $user_id; // Add user_id to parameters
+
+        $stmt = $conn->prepare($sql);
+        // Bind parameters dynamically
+        $bind_params = array($types);
+        foreach ($params as $key => $value) {
+            $bind_params[] = &$params[$key];
+        }
+        call_user_func_array(array($stmt, 'bind_param'), $bind_params);
+
+        if ($stmt->execute()) {
+            $_SESSION['success_message'] = "ข้อมูลผู้ใช้ถูกอัพเดทเรียบร้อยแล้ว";
+            $show_success_alert = true; // เพิ่มตัวแปรเพื่อบอกว่าต้องแสดง alert
+        } else {
+            $_SESSION['error_message'] = "เกิดข้อผิดพลาดในการอัพเดทข้อมูล: " . $conn->error;
+            $show_error_alert = true; // เพิ่มตัวแปรเพื่อบอกว่าต้องแสดง alert error
+        }
+        $stmt->close();
+    }
 }
 ?>
 
@@ -35,6 +126,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <title>แก้ไขข้อมูลผู้ใช้</title>
     <link rel="icon" type="image/png" href="../assets/images/home.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
     .sidebar {
         height: 100vh;
@@ -90,30 +185,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <body>
     <!-- Sidebar -->
-    <div class="sidebar">
-
-        <img src="../assets/images/home.png" alt="Logo" width="50">
-        <center style="color: white;">หอพักบ้านพุธชาติ</center>
-        <br>
-
-        <a href="dashboard.php">Dashboard</a>
-        <a href="manage_rooms.php">Manage Rooms</a>
-        <a href="manage_users.php">Manage Users</a>
-        <a href="manage_bills.php">Manage Bills</a>
-        <a href="reports.php">Report</a>
-        <a href="../public/logout.php">Logout</a>
-    </div>
-
+    <?php
+    include "../assets/assets/admin_sidebar.php";
+    ?>
 
     <!-- Content -->
     <div class="content">
         <h2>แก้ไขข้อมูลผู้ใช้</h2>
 
-        <form method="post">
+        <br>
+        <form method="post" enctype="multipart/form-data">
+
             <div class="mb-3">
                 <label for="full_name" class="form-label">ชื่อ-นามสกุล:</label>
                 <input type="text" class="form-control" name="full_name" id="full_name"
                     value="<?= $user['full_name'] ?>" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="IDCard" class="form-label">เลขบัตรประชาชน:</label>
+                <input type="text" class="form-control" name="IDCard" id="IDCard" value="<?= $user['IDCard'] ?>"
+                    required>
             </div>
 
             <div class="mb-3">
@@ -135,20 +227,58 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </select>
             </div>
 
+            <div class="mb-3">
+                <label for="charter" class="form-label">สัญญาเช่า:</label>
+                <?php if (!empty($user['charter']) && file_exists("../assets/Data/file_Charter/" . $user['charter'])): ?>
+                <div class="mb-2">
+                    <a href="../assets/Data/file_Charter/<?= htmlspecialchars($user['charter']) ?>" download
+                        class="btn btn-info btn-sm">
+                        <i class="fas fa-file-download"></i> ดาวน์โหลด Charter ปัจจุบัน
+                    </a>
+                </div>
+                <?php endif; ?>
+                <input type="file" class="form-control" name="charter">
+            </div>
+
             <button type="submit" class="btn btn-primary">บันทึก</button>
             <button class="btn btn-warning float-end">
                 <a href="manage_users.php" style="color: white; text-decoration: none;">กลับไปที่หน้าจัดการผู้ใช้งาน</a>
             </button>
         </form>
-
-
     </div>
-    <br><br><br><br><br><br><br>
+
     <!-- Footer -->
     <div class="footer">
         <p>&copy; 2023 Your Company. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of
                 Service</a></p>
     </div>
+
+    <!-- ย้าย script มาไว้ตรงนี้แทน -->
+    <?php if (isset($show_success_alert) && $show_success_alert): ?>
+    <script>
+    Swal.fire({
+        title: 'สำเร็จ!',
+        text: 'อัปเดตข้อมูลเรียบร้อยแล้ว',
+        icon: 'success',
+        confirmButtonText: 'ตกลง'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = 'manage_users.php';
+        }
+    });
+    </script>
+    <?php endif; ?>
+
+    <?php if (isset($show_error_alert) && $show_error_alert): ?>
+    <script>
+    Swal.fire({
+        title: 'ข้อผิดพลาด!',
+        text: 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล',
+        icon: 'error',
+        confirmButtonText: 'ตกลง'
+    });
+    </script>
+    <?php endif; ?>
 </body>
 
 </html>

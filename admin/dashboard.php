@@ -1,5 +1,5 @@
 <?php
-include '../config/session.php';// เริ่ม session
+include '../config/session.php'; // เริ่ม session
 include '../config/database.php'; // ไฟล์เชื่อมต่อฐานข้อมูล
 
 // ตรวจสอบว่าผู้ใช้ล็อกอินอยู่หรือไม่
@@ -219,20 +219,12 @@ $months = [
 
 <body>
 
-    <div class="sidebar">
-        <img src="../assets/images/home.png" alt="Logo" width="50">
-        <center style="color: white;">หอพักบ้านพุธชาติ</center>
-        <center style="color: white;"><?php echo htmlspecialchars($full_name); ?></center>
-        <a href="dashboard.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-        <a href="manage_rooms.php"><i class="fas fa-bed"></i> Manage Rooms</a>
-        <a href="manage_users.php"><i class="fas fa-users"></i> Manage Users</a>
-        <a href="manage_bills.php"><i class="fas fa-file-invoice-dollar"></i> Manage Bills</a>
-        <a href="reports.php"><i class="fas fa-chart-line"></i> Report</a>
-        <a href="../public/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
-    </div>
-            
+    <?php
+    include "../assets/assets/admin_sidebar.php";
+    ?>
+
     <div class="content">
-    <h2>Admin Dashboard</h2>
+        <h2>Admin Dashboard</h2>
         <!-- ห้องพักสถานะ -->
         <div class="d-flex  gap-1 my-3">
             <div class="bg-success text-white p-3 rounded"></div>
@@ -246,9 +238,8 @@ $months = [
         <!-- แสดงห้องพัก -->
         <div class="room-status">
             <?php while ($room = $result->fetch_assoc()) : ?>
-            <div class="room <?php
-                                    echo $room['status'] == 'available' ? 'available' : ($room['status'] == 'occupied' ? 'occupied' : 'maintenance');
-                                    ?>">
+            <div class="room <?php echo $room['status'] == 'available' ? 'available' : ($room['status'] == 'occupied' ? 'occupied' : 'maintenance'); ?>"
+                onclick="showRoomDetails(<?php echo $room['id']; ?>, '<?php echo $room['room_number']; ?>', '<?php echo $room['status']; ?>')">
                 ห้อง <?php echo $room['room_number']; ?>
             </div>
             <?php endwhile; ?>
@@ -302,8 +293,24 @@ $months = [
 
     <!-- Footer -->
     <div class="footer">
-        <p>&copy; 2023 Your Company. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of
+        <p>&copy; 2023 หอพักบ้านพุทธชาติ. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms
+                of
                 Service</a></p>
+    </div>
+
+    <!-- Modal สำหรับแสดงรายละเอียดห้อง -->
+    <div class="modal fade" id="roomModal" tabindex="-1" aria-labelledby="roomModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="roomModalLabel">รายละเอียดห้อง</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="roomDetails">
+                    <!-- ข้อมูลห้องจะถูกเพิ่มที่นี่ด้วย JavaScript -->
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -405,6 +412,48 @@ $months = [
         },
         options: options
     });
+    </script>
+
+    <!-- เพิ่ม Bootstrap JS ก่อน </body> -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    // เพิ่มฟังก์ชัน JavaScript สำหรับแสดง Modal
+    function showRoomDetails(roomId, roomNumber, status) {
+        // แปลงสถานะเป็นภาษาไทย
+        const statusThai = {
+            'available': 'ว่าง',
+            'occupied': 'มีผู้เช่า',
+            'maintenance': 'กำลังซ่อมบำรุง'
+        };
+
+        // ส่ง AJAX request เพื่อดึงข้อมูลห้อง
+        fetch(`get_room_details.php?room_id=${roomId}`)
+            .then(response => response.json())
+            .then(data => {
+                let detailsHtml = `
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">ข้อมูลห้องพัก</h5>
+                            <p><strong>เลขห้อง:</strong> ${roomNumber}</p>
+                            <p><strong>สถานะ:</strong> ${statusThai[status]}</p>
+                        </div>
+                    </div>
+                `;
+
+                // เพิ่มข้อมูลผู้เช่า (ถ้ามี)
+                if (data.tenant) {
+                    detailsHtml += `
+                        <p><strong>ผู้เช่า:</strong> ${data.tenant.name}</p>
+                        <p><strong>เบอร์โทร:</strong> ${data.tenant.phone}</p>
+                        <p><strong>วันที่เข้าอยู่:</strong> ${data.tenant.move_in_date}</p>
+                    `;
+                }
+
+                document.getElementById('roomDetails').innerHTML = detailsHtml;
+                new bootstrap.Modal(document.getElementById('roomModal')).show();
+            })
+            .catch(error => console.error('Error:', error));
+    }
     </script>
 
 </body>

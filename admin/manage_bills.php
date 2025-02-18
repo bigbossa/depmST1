@@ -60,6 +60,8 @@ $months = [
     <title>Manage Bills</title>
     <link rel="icon" type="image/png" href="../assets/images/home.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
     .sidebar {
@@ -139,17 +141,10 @@ $months = [
 </head>
 
 <body>
-    <div class="sidebar">
-        <img src="../assets/images/home.png" alt="Logo" width="50">
-        <center style="color: white;">หอพักบ้านพุธชาติ</center>
-        <center style="color: white;"><?php echo htmlspecialchars($_SESSION['full_name'] ?? 'Guest'); ?></center>
-        <a href="dashboard.php">Dashboard</a>
-        <a href="manage_rooms.php">Manage Rooms</a>
-        <a href="manage_users.php">Manage Users</a>
-        <a href="manage_bills.php">Manage Bills</a>
-        <a href="reports.php">Report</a>
-        <a href="../public/logout.php">Logout</a>
-    </div>
+    <!-- Sidebar -->
+    <?php
+    include "../assets/assets/admin_sidebar.php";
+    ?>
 
     <div class="content">
         <h2 class="mb-4">Manage Bills</h2>
