@@ -147,7 +147,7 @@ $months = [
     ?>
 
     <div class="content">
-        <h2 class="mb-4">Manage Bills</h2>
+        <h2 class="mb-4">Total Salary</h2>
 
         <!-- สรุปยอดรวมทั้งปี -->
         <div class="finance-summary">

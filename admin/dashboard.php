@@ -238,7 +238,30 @@ $months = [
         <!-- แสดงห้องพัก -->
         <div class="room-status">
             <?php while ($room = $result->fetch_assoc()) : ?>
-            <div class="room <?php echo $room['status'] == 'available' ? 'available' : ($room['status'] == 'occupied' ? 'occupied' : 'maintenance'); ?>"
+            <?php
+                // เพิ่ม debug เพื่อดูค่า status ที่ได้จากฐานข้อมูล
+                // echo "Status: " . $room['status'] . "<br>";
+
+                $statusClass = '';
+                // แปลงเป็นตัวพิมพ์เล็กและตัดช่องว่างเพื่อป้องกันความผิดพลาด
+                $status = strtolower(trim($room['status']));
+
+                switch ($status) {
+                    case 'available':
+                    case 'ว่าง':
+                        $statusClass = 'available';
+                        break;
+                    case 'occupied':
+                    case 'ไม่ว่าง':
+                        $statusClass = 'occupied';
+                        break;
+                    case 'reserved':
+                    case 'จอง':
+                        $statusClass = 'maintenance'; // ใช้ class maintenance เพื่อแสดงสีเหลือง
+                        break;
+                }
+                ?>
+            <div class="room <?php echo $statusClass; ?>"
                 onclick="showRoomDetails(<?php echo $room['id']; ?>, '<?php echo $room['room_number']; ?>', '<?php echo $room['status']; ?>')">
                 ห้อง <?php echo $room['room_number']; ?>
             </div>
@@ -419,40 +442,38 @@ $months = [
     <script>
     // เพิ่มฟังก์ชัน JavaScript สำหรับแสดง Modal
     function showRoomDetails(roomId, roomNumber, status) {
-        // แปลงสถานะเป็นภาษาไทย
-        const statusThai = {
-            'available': 'ว่าง',
-            'occupied': 'มีผู้เช่า',
-            'maintenance': 'กำลังซ่อมบำรุง'
-        };
-
-        // ส่ง AJAX request เพื่อดึงข้อมูลห้อง
         fetch(`get_room_details.php?room_id=${roomId}`)
             .then(response => response.json())
             .then(data => {
                 let detailsHtml = `
-                    <div class="card">
+                    <div class="card mb-3">
                         <div class="card-body">
-                            <h5 class="card-title mb-3">ข้อมูลห้องพัก</h5>
-                            <p><strong>เลขห้อง:</strong> ${roomNumber}</p>
-                            <p><strong>สถานะ:</strong> ${statusThai[status]}</p>
+                            <h5 class="card-title">ข้อมูลห้องพัก</h5>
+                            <p class="card-text"><strong>เลขห้อง:</strong> ${data.room_number}</p>
+                            <p class="card-text"><strong>สถานะ:</strong> ${data.status}</p>
+                            <p class="card-text"><strong>ราคา:</strong> ${Number(data.price).toLocaleString()} บาท</p>
                         </div>
-                    </div>
-                `;
+                    </div>`;
 
-                // เพิ่มข้อมูลผู้เช่า (ถ้ามี)
+                // ถ้ามีข้อมูลผู้เช่า
                 if (data.tenant) {
                     detailsHtml += `
-                        <p><strong>ผู้เช่า:</strong> ${data.tenant.name}</p>
-                        <p><strong>เบอร์โทร:</strong> ${data.tenant.phone}</p>
-                        <p><strong>วันที่เข้าอยู่:</strong> ${data.tenant.move_in_date}</p>
-                    `;
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">ข้อมูลผู้เช่า</h5>
+                                <p class="card-text"><strong>ชื่อ-นามสกุล:</strong> ${data.tenant.name}</p>
+                                <p class="card-text"><strong>เบอร์โทร:</strong> ${data.tenant.phone}</p>
+                            </div>
+                        </div>`;
                 }
 
                 document.getElementById('roomDetails').innerHTML = detailsHtml;
                 new bootstrap.Modal(document.getElementById('roomModal')).show();
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error:', error);
+                alert('เกิดข้อผิดพลาดในการดึงข้อมูล');
+            });
     }
     </script>
 

@@ -103,6 +103,8 @@ if (isset($_SESSION['user_id'])) {
                     <th>ราคา</th>
                     <th>สถานะ</th>
                     <th>ผู้เช่า</th>
+                    <th>วันที่เข้าพัก</th>
+                    <th>วันที่สิ้นสุด</th>
                     <th>การกระทำ</th>
                 </tr>
             </thead>
@@ -110,28 +112,21 @@ if (isset($_SESSION['user_id'])) {
                 <?php while ($row = $result->fetch_assoc()) { ?>
                 <tr>
                     <td><?= $row["room_number"] ?></td>
+                    <td><?= $row["type"] ? $row["type"] : 'ไม่มีข้อมูล' ?></td>
+                    <td><?= number_format($row["price"], 2) ?> บาท</td>
                     <td>
-                        <?php 
-                            // ตรวจสอบและแสดงประเภทห้องที่มีค่า
-                            echo $row["type"] ? $row["type"] : 'ไม่มีข้อมูล';
+                        <?php
+                            $status_labels = [
+                                'available' => 'ว่าง',
+                                'reserved' => 'ซ่อมแซม',
+                                'occupied' => 'มีผู้เช่า'
+                            ];
+                            echo $status_labels[$row['status']] ?? 'ไม่ทราบสถานะ';
                             ?>
                     </td>
-                    <td><?= $row["price"] ?> บาท</td>
                     <td>
                         <?php
-    $status_labels = [
-        'available' => 'ว่าง',
-        'reserved' => 'ซ่อมแซม',
-        'occupied' => 'มีผู้เช่า'
-    ];
-    echo $status_labels[$row['status']] ?? 'ไม่ทราบสถานะ';
-    ?>
-                    </td>
-                    <td>
-                        <?php
-                            // แสดงผู้เช่าหากมี tenant_id
                             if (!empty($row["tenant_id"])) {
-                                // สามารถดึงข้อมูลผู้เช่าจากตารางอื่น ๆ (เช่น users) ได้
                                 $tenant_id = $row["tenant_id"];
                                 $tenant_result = $conn->query("SELECT full_name FROM users WHERE id = '$tenant_id'");
                                 $tenant = $tenant_result->fetch_assoc();
@@ -141,6 +136,8 @@ if (isset($_SESSION['user_id'])) {
                             }
                             ?>
                     </td>
+                    <td><?= $row["Date of Stay"] ? date('d/m/Y', strtotime($row["Date of Stay"])) : '-' ?></td>
+                    <td><?= $row["Expiration Date"] ? date('d/m/Y', strtotime($row["Expiration Date"])) : '-' ?></td>
                     <td><a href="edit_room.php?id=<?= $row["id"] ?>" class="btn btn-warning">แก้ไข</a></td>
                 </tr>
                 <?php } ?>

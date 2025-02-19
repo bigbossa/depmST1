@@ -51,16 +51,40 @@ $users = $user_query->fetch_all(MYSQLI_ASSOC);
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $room_number = $_POST["room_number"];
     $type = $_POST["type"];
-    $price = $_POST["price"];
+    $price = $_POST["price"] !== '' ? $_POST["price"] : null;
     $status = $_POST["status"];
-    $tenant_id = empty($_POST["tenant_id"]) ? NULL : $_POST["tenant_id"]; // เปลี่ยนค่า "" เป็น NULL
+    $tenant_id = $_POST["tenant_id"] !== '' ? $_POST["tenant_id"] : null;
+    $date_of_stay = $_POST["date_of_stay"] !== '' ? $_POST["date_of_stay"] : null;
+    $expiration_date = $_POST["expiration_date"] !== '' ? $_POST["expiration_date"] : null;
 
     // อัพเดตข้อมูลห้องพัก
-    $stmt = $conn->prepare("UPDATE rooms SET room_number = ?, type = ?, price = ?, status = ?, tenant_id = ? WHERE id = ?");
-    $stmt->bind_param("ssdsii", $room_number, $type, $price, $status, $tenant_id, $room_id);
-    $stmt->execute();
+    $stmt = $conn->prepare("UPDATE rooms SET 
+            room_number = ?,
+            type = ?,
+            price = ?,
+            status = ?,
+            tenant_id = ?,
+            `Date of Stay` = ?,
+            `Expiration Date` = ?
+            WHERE id = ?");
+    $stmt->bind_param(
+        "sssssssi",
+        $room_number,
+        $type,
+        $price,
+        $status,
+        $tenant_id,
+        $date_of_stay,
+        $expiration_date,
+        $room_id
+    );
 
-    $success_message = "ข้อมูลห้องพักถูกอัพเดตเรียบร้อยแล้ว!";
+    if ($stmt->execute()) {
+        echo "<script>alert('อัพเดทข้อมูลสำเร็จ'); window.location.href='manage_rooms.php';</script>";
+    } else {
+        echo "<script>alert('เกิดข้อผิดพลาด: " . $stmt->error . "');</script>";
+    }
+    $stmt->close();
 }
 ?>
 <!DOCTYPE html>
@@ -150,11 +174,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <?php if (isset($success_message)) echo "<div class='alert alert-success'>$success_message</div>"; ?>
 
-        <form method="post" class="mb-4">
+        <form method="POST" action="">
+            <input type="hidden" name="id" value="<?= $room['id'] ?>">
+
             <div class="mb-3">
                 <label for="room_number" class="form-label">หมายเลขห้อง:</label>
                 <input type="text" name="room_number" id="room_number" class="form-control"
-                    value="<?= $room['room_number'] ?>" required readonly>
+                    value="<?= $room['room_number'] ?>" required>
             </div>
 
             <div class="mb-3">
@@ -169,7 +195,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="mb-3">
                 <label for="price" class="form-label">ราคา:</label>
                 <input type="number" step="0.01" name="price" id="price" class="form-control"
-                    value="<?= $room['price'] ?>" required>
+                    value="<?= $room['price'] ?>">
             </div>
 
             <div class="mb-3">
@@ -193,7 +219,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 </select>
             </div>
 
-            <button type="submit" class="btn btn-primary">บันทึกการเปลี่ยนแปลง</button>
+            <div class="mb-3">
+                <label for="date_of_stay" class="form-label">วันที่เข้าพัก:</label>
+                <input type="date" name="date_of_stay" id="date_of_stay" class="form-control"
+                    value="<?= $room['Date of Stay'] ?>">
+            </div>
+
+            <div class="mb-3">
+                <label for="expiration_date" class="form-label">วันที่สิ้นสุด:</label>
+                <input type="date" name="expiration_date" id="expiration_date" class="form-control"
+                    value="<?= $room['Expiration Date'] ?>">
+            </div>
+
+            <button type="submit" name="update" class="btn btn-primary">บันทึกการเปลี่ยนแปลง</button>
             <button class="btn btn-warning float-end">
                 <a href="manage_rooms.php" style="color: white; text-decoration: none;">กลับไปที่หน้าจัดการห้อง</a>
         </form>
