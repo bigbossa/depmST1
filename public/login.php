@@ -150,7 +150,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <br>
             <button type="submit">เข้าสู่ระบบ</button>
         </form>
-        <p>ยังไม่มีบัญชี? <a href="register.php">สมัครสมาชิก</a></p>
+        <!-- <p>ยังไม่มีบัญชี? <a href="register.php">สมัครสมาชิก</a></p> -->
     </div>
 </body>
 

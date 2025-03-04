@@ -29,60 +29,11 @@ if (isset($_SESSION['user_id'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>จัดการห้องพัก</title>
     <link rel="icon" type="image/png" href="../assets/images/home.png">
+    <link rel="stylesheet" href="../assets/css/sidebar.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-    .sidebar {
-        height: 100vh;
-        width: 250px;
-        position: fixed;
-        top: 0;
-        left: 0;
-        background-color: #343a40;
-        padding-top: 20px;
-    }
-
-    .sidebar a {
-        padding: 10px;
-        text-decoration: none;
-        color: white;
-        display: block;
-    }
-
-    .sidebar a:hover {
-        background-color: #495057;
-    }
-
-    .content {
-        margin-left: 260px;
-        padding: 20px;
-    }
-
-    .footer {
-        margin-left: 150px;
-        padding: 16px;
-        background-color: #343a40;
-        color: white;
-        text-align: center;
-    }
-
-    .footer a {
-        color: #5b9bd5;
-        text-decoration: none;
-    }
-
-    .footer a:hover {
-        text-decoration: underline;
-    }
-
-    .sidebar img {
-        display: block;
-        margin: 0 auto;
-        border-radius: 10px;
-    }
-    </style>
 </head>
 
 <body>

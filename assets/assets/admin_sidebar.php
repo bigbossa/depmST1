@@ -7,6 +7,7 @@
     <a href="manage_users.php"><i class="fas fa-users"></i> Manage Users</a>
     <a href="manage_bills.php"><i class="fas fa-file-invoice-dollar"></i> Total Salary</a>
     <a href="reports.php"><i class="fas fa-chart-line"></i> Report</a>
-    <a href="electricity_and_water_unit.php"><i <i class="fa-solid fa-bolt"></i> Unit</a>
+    <a href="electricity_and_water_unit.php"><i class="fas fa-bolt"></i> Unit</a>
+    <a href="event.php"><i class="fas fa-calendar-alt"></i> Event</a>
     <a href="../public/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
 </div>
