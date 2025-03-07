@@ -4,7 +4,8 @@ $id = $_GET['id'];
 
 $conn->query("DELETE FROM events WHERE id=$id");
 
-echo "<script>alert('ลบกำหนดการสำเร็จ!'); window.location='../../admin/event.php';</script>";
+echo "<script>alert('ลบสำเร็จ!'); window.history.back();</script>";
+
 
 $conn->close();
 ?>

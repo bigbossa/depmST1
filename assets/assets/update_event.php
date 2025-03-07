@@ -10,7 +10,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->bind_param("ssi", $event_date, $title, $id);
     $stmt->execute();
 
-    echo "<script>alert('อัปเดตกำหนดการสำเร็จ!'); window.location='../../admin/event.php';</script>";
+    echo "<script>alert('อัปเดตกำหนดการสำเร็จ!'); window.history.back();</script>";
+
 }
 
 $conn->close();

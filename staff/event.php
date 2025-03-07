@@ -36,7 +36,7 @@ if (isset($_GET["delete"])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>จัดการผู้ใช้</title>
+    <title>ปฏิทิน&กำหนดการ</title>
     <link rel="icon" type="image/png" href="../assets/images/home.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
@@ -97,15 +97,16 @@ if (isset($_GET["delete"])) {
 <body>
     <!-- Sidebar -->
     <?php
-    include "../assets/assets/tenant_sidebar.php";
+    include "../assets/assets/admin_sidebar.php";
     ?>
 
 
     <!-- Content -->
     <div class="content">
-        <h2 class="mb-4">Tenant dashboard</h2>
+        <h2 class="mb-4">ปฏิทิน&กำหนดการ</h2>
         <?php
-            include "../assets/assets/calendar.php";
+        include "../assets/assets/calendar.php";
+        include "../assets/assets/events_list.php";
         ?>
 
     </div>

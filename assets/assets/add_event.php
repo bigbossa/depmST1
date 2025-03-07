@@ -60,7 +60,7 @@
             <button type="submit">บันทึก</button>
         </form>
         <br>
-        <button onclick="window.location.href='../../admin/event.php'"
+        <button onclick="window.location.href='javascript:history.back()'"
             style="background-color: #808080;">ย้อนกลับ</button>
     </div>
 

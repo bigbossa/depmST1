@@ -11,6 +11,7 @@ $event = $result->fetch_assoc();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <title>แก้ไขกำหนดการ</title>
     <style>
     body {
@@ -65,6 +66,9 @@ $event = $result->fetch_assoc();
             <label>รายละเอียด:</label>
             <input type="text" name="title" value="<?= $event['title'] ?>" required>
             <button type="submit">บันทึก</button>
+            <p>&</p>
+            <a href="javascript:history.back()" class="btn btn-primary mb-1 " style="padding: 10px;">กลับหน้าก่อนหน้า</a>
+
         </form>
     </div>
 

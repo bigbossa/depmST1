@@ -572,7 +572,7 @@ session_start();
 
                     <!-- <p class="mbr-fonts-style mbr-text mbr-white mb-4 display-7">ที่นี่คือที่ที่คุณจะเริ่มต้นการผจญภัยใหม่!</p> -->
                     <div class="mbr-section-btn">
-                        <a class="btn btn-white-outline display-7" href="#">ลงทะเบียนตอนนี้</a>
+                        <a class="btn btn-white-outline display-7" href="public/login.php">เข้าสุู่ระบบ</a>
                     </div>
                 </div>
             </div>
@@ -674,61 +674,7 @@ session_start();
 
     <section data-bs-version="5.1" class="list05 cid-uunpiZuvhj" id="faq-3-uunpiZuvhj">
 
-        <div class="container">
-            <div class="col-12 mb-5 content-head">
-                <h3 class="mbr-section-title mbr-fonts-style align-center mb-0 display-2">
-                    <strong>คำถามที่พบบ่อย</strong>
-                </h3>
 
-            </div>
-            <div class="row justify-content-center ">
-                <div class="col-12 col-lg-8">
-                    <div class="item features-without-image col-12 active">
-                        <div class="item-wrapper">
-                            <h5 class="mbr-card-title mbr-fonts-style mt-0 mb-3 display-5">
-                                <strong>การลงทะเบียนทำอย่างไร?</strong>
-                            </h5>
-                            <p class="mbr-text mbr-fonts-style mt-0 mb-3 display-7">กรุณากรอกข้อมูลในแบบฟอร์มลงทะเบียน.
-                            </p>
-                        </div>
-                    </div>
-                    <div class="item features-without-image col-12">
-                        <div class="item-wrapper">
-                            <h5 class="mbr-card-title mbr-fonts-style mt-0 mb-3 display-5">
-                                <strong>ฉันลืมรหัสผ่านทำไงดี?</strong>
-                            </h5>
-                            <p class="mbr-text mbr-fonts-style mt-0 mb-3 display-7">คลิกที่ลืมรหัสผ่านเพื่อรีเซ็ตรหัส.
-                            </p>
-                        </div>
-                    </div>
-                    <div class="item features-without-image col-12">
-                        <div class="item-wrapper">
-                            <h5 class="mbr-card-title mbr-fonts-style mt-0 mb-3 display-5">
-                                <strong>มีห้องว่างไหม?</strong>
-                            </h5>
-                            <p class="mbr-text mbr-fonts-style mt-0 mb-3 display-7">ตรวจสอบในหน้าห้องว่างได้เลย.</p>
-                        </div>
-                    </div>
-                    <div class="item features-without-image col-12">
-                        <div class="item-wrapper">
-                            <h5 class="mbr-card-title mbr-fonts-style mt-0 mb-3 display-5">
-                                <strong>ฉันสามารถแก้ไขข้อมูลได้ไหม?</strong>
-                            </h5>
-                            <p class="mbr-text mbr-fonts-style mt-0 mb-3 display-7">ใช่!
-                                คุณสามารถแก้ไขข้อมูลได้ทุกเมื่อ.</p>
-                        </div>
-                    </div>
-                    <div class="item features-without-image col-12">
-                        <div class="item-wrapper">
-                            <h5 class="mbr-card-title mbr-fonts-style mt-0 mb-3 display-5">
-                                <strong>ติดต่อฝ่ายบริการลูกค้าได้ที่ไหน?</strong>
-                            </h5>
-                            <p class="mbr-text mbr-fonts-style mt-0 mb-3 display-7">ติดต่อเราผ่านช่องทางที่ระบุไว้.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </section>
 
 
@@ -744,105 +690,12 @@ session_start();
         </div>
     </section>
 
-    <!-- <section data-bs-version="5.1" class="people07 cid-uunpiZvY5u" id="testimonials-8-uunpiZvY5u">
-    
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-12 col-lg-8">
-                <p class="card-text mbr-fonts-style display-5">บริการดีมาก ห้องสะอาดและน่าอยู่!</p>
-                <div class="img-wrapper mt-3 justify-content-center">
-                    <img src="https://r.mobirisesite.com/908256/assets/images/photo-1676385901160-31e1b9e1c0c7.jpeg" alt="" data-slide-to="0" data-bs-slide-to="0">
-                </div>
-                <p class="card-title mbr-fonts-style mt-3 display-7">
-                    <strong>นางสาวสุกัญญา</strong>
-                </p>
-            </div>
-        </div>
-    </div>
-</section> -->
-
     <section data-bs-version="5.1" class="people03 cid-uunpiZv0Ag" id="team-1-uunpiZv0Ag">
 
+        <?php
+            require ("assets\assets\calendar.php");
+        ?>
 
-        <div class="container-fluid">
-            <div class="row justify-content-center">
-                <div class="col-12 content-head">
-                    <div class="mbr-section-head mb-5">
-                        <h5 class="mbr-section-title mbr-fonts-style align-center mb-0 display-2">
-                            <strong>ทีมผู้จัดทำ</strong>
-                        </h5>
-
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="item features-image col-12 col-md-6 col-lg-3">
-                    <div class="item-wrapper">
-                        <div class="item-img mb-3">
-                            <img src="https://i.ibb.co/9c8MRP1/image-2024-11-24-202715129.png" alt="" title="">
-                        </div>
-                        <div class="item-content align-left">
-                            <h5 class="item-title mbr-fonts-style display-5">
-                                <small>ณัฐวุฒิ ลิ้มฉาย</small>
-                            </h5>
-
-                            <h6 class="item-subtitle mbr-fonts-style mb-3 display-7">Developer FrontEnd</h6>
-                            <p class="item-subtitle mbr-fonts-style mb-3 display-7">654230004</p>
-                        </div>
-
-                    </div>
-                </div>
-                <div class="item features-image col-12 col-md-6 col-lg-3">
-                    <div class="item-wrapper">
-                        <div class="item-img mb-3">
-                            <img src="https://i.ibb.co/zS2xtMF/image-2024-11-24-203456414.png" alt="" title="">
-                        </div>
-                        <div class="item-content align-left">
-                            <h5 class="item-title mbr-fonts-style display-5">
-                                <small>ณัฐิวุฒิ นงนุช</small>
-                            </h5>
-                            <h6 class="item-subtitle mbr-fonts-style mb-3 display-7">Developer FrontEnd</h6>
-                            <p class="item-subtitle mbr-fonts-style mb-3 display-7">654230005</p>
-
-                        </div>
-
-                    </div>
-                </div>
-                <div class="item features-image col-12 col-md-6 col-lg-3">
-                    <div class="item-wrapper">
-                        <div class="item-img mb-3">
-                            <img src="https://i.ibb.co/ftLQYcy/image-2024-11-24-201803287.png" alt="" title="">
-                        </div>
-                        <div class="item-content align-left">
-                            <h6 class="item-title mbr-fonts-style display-5">
-                                <small>พัฒนพงษ์ สุขคำแสน</small>
-                            </h6>
-                            <h6 class="item-subtitle mbr-fonts-style mb-3 display-7">Developer Backend</h6>
-                            <p class="item-subtitle mbr-fonts-style mb-3 display-7">654230017</p>
-
-                        </div>
-
-                    </div>
-                </div>
-                <div class="item features-image col-12 col-md-6 col-lg-3">
-                    <div class="item-wrapper">
-                        <div class="item-img mb-3">
-                            <img src="https://i.ibb.co/NLJWvBj/image-2024-11-24-203629275.png" alt="" title=""
-                                data-slide-to="3" data-bs-slide-to="3">
-                        </div>
-                        <div class="item-content align-left">
-                            <h5 class="item-title mbr-fonts-style display-5">
-                                <small>จตุรภัทร พลรบ</small>
-                            </h5>
-                            <h6 class="item-subtitle mbr-fonts-style mb-3 display-7">Developer Backend</h6>
-                            <p class="item-subtitle mbr-fonts-style mb-3 display-7">654230018</p>
-
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        </div>
     </section>
 
     <section data-bs-version="5.1" class="image02 cid-uunpiZwBR7 mbr-fullscreen mbr-parallax-background"
@@ -860,9 +713,7 @@ session_start();
     </section>
 
     <section data-bs-version="5.1" class="social4 cid-uunpiZymln" id="follow-us-1-uunpiZymln">
-        <?php
-            require ("assets\assets\calendar.php");
-        ?>
+
     </section>
 
     <section data-bs-version="5.1" class="form5 cid-uunpiZy2fV" id="contact-form-2-uunpiZy2fV">
@@ -924,6 +775,13 @@ session_start();
 
                 <div class="col-12 mt-5">
                     <p class="mbr-fonts-style copyright display-7">© 2024 ทุกสิทธิ์สงวนไว้</p>
+                </div>
+                <div class="col-12 mt-5">
+                    <p class="mbr-fonts-style copyright display-7">ผู้จัดทำ</p>
+                    <p class="mbr-fonts-style copyright display-7">654230004</p>
+                    <p class="mbr-fonts-style copyright display-7">654230005</p>
+                    <p class="mbr-fonts-style copyright display-7">654230017</p>
+                    <p class="mbr-fonts-style copyright display-7">654230018</p>
                 </div>
             </div>
         </div>

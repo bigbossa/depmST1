@@ -3,10 +3,15 @@ include("../config/session.php");
 include("../config/database.php");
 
 // ตรวจสอบสิทธิ์ผู้ใช้
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../index.php");
+    exit();
+}
 if ($_SESSION['role'] != 'admin') {
     header("Location: ../index.php");
     exit();
 }
+
 // ตรวจสอบว่าผู้ใช้ล็อกอินอยู่หรือไม่
 if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
@@ -23,6 +28,7 @@ if (isset($_SESSION['user_id'])) {
 } else {
     $full_name = 'Guest'; // หากไม่ได้ล็อกอินให้แสดง 'Guest'
 }
+
 // ตรวจสอบว่าได้ส่ง id ห้องพักมาไหม
 if (!isset($_GET['id'])) {
     header("Location: manage_rooms.php");
@@ -45,7 +51,7 @@ if ($result->num_rows == 0) {
 $room = $result->fetch_assoc();
 
 // ดึงรายชื่อผู้เช่าจากตาราง users ที่มี role เป็น 'tenant'
-$user_query = $conn->query("SELECT id, username FROM users WHERE role = 'tenant'");
+$user_query = $conn->query("SELECT id, username, full_name FROM users WHERE role = 'tenant'");
 $users = $user_query->fetch_all(MYSQLI_ASSOC);
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -64,11 +70,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             price = ?,
             status = ?,
             tenant_id = ?,
-            `Date of Stay` = ?,
-            `Expiration Date` = ?
+            `Date_of_Stay` = ?,
+            `Expiration_Date` = ?
             WHERE id = ?");
     $stmt->bind_param(
-        "sssssssi",
+        "ssdssssi",
         $room_number,
         $type,
         $price,
@@ -80,9 +86,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     );
 
     if ($stmt->execute()) {
-        echo "<script>alert('อัพเดทข้อมูลสำเร็จ'); window.location.href='manage_rooms.php';</script>";
+        $success_message = "อัพเดทข้อมูลสำเร็จ";
     } else {
-        echo "<script>alert('เกิดข้อผิดพลาด: " . $stmt->error . "');</script>";
+        $error_message = "เกิดข้อผิดพลาด: " . $stmt->error;
     }
     $stmt->close();
 }
@@ -164,15 +170,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <body>
     <!-- Sidebar -->
-    <?php
-    include "../assets/assets/admin_sidebar.php";
-    ?>
+    <?php include "../assets/assets/admin_sidebar.php"; ?>
 
     <!-- Content -->
     <div class="content">
         <h2>แก้ไขข้อมูลห้องพัก</h2>
 
-        <?php if (isset($success_message)) echo "<div class='alert alert-success'>$success_message</div>"; ?>
+        <?php if (isset($success_message)): ?>
+        <div class="alert alert-success"><?= $success_message ?></div>
+        <?php endif; ?>
+        <?php if (isset($error_message)): ?>
+        <div class="alert alert-danger"><?= $error_message ?></div>
+        <?php endif; ?>
 
         <form method="POST" action="">
             <input type="hidden" name="id" value="<?= $room['id'] ?>">
@@ -180,7 +189,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="mb-3">
                 <label for="room_number" class="form-label">หมายเลขห้อง:</label>
                 <input type="text" name="room_number" id="room_number" class="form-control"
-                    value="<?= $room['room_number'] ?>" required>
+                    value="<?= $room['room_number'] ?>" readonly>
             </div>
 
             <div class="mb-3">
@@ -213,7 +222,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <option value="">ไม่มีผู้เช่า</option>
                     <?php foreach ($users as $user): ?>
                     <option value="<?= $user['id'] ?>" <?= $room['tenant_id'] == $user['id'] ? 'selected' : '' ?>>
-                        <?= $user['username'] ?>
+                        <?= $user['full_name'] ?? 'ไม่ระบุชื่อ' ?>
                     </option>
                     <?php endforeach; ?>
                 </select>
@@ -222,21 +231,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="mb-3">
                 <label for="date_of_stay" class="form-label">วันที่เข้าพัก:</label>
                 <input type="date" name="date_of_stay" id="date_of_stay" class="form-control"
-                    value="<?= $room['Date of Stay'] ?>">
+                    value="<?= $room['Date_of_Stay'] ? date('Y-m-d', strtotime($room['Date_of_Stay'])) : '' ?>">
             </div>
 
             <div class="mb-3">
                 <label for="expiration_date" class="form-label">วันที่สิ้นสุด:</label>
                 <input type="date" name="expiration_date" id="expiration_date" class="form-control"
-                    value="<?= $room['Expiration Date'] ?>">
+                    value="<?= $room['Expiration_Date'] ? date('Y-m-d', strtotime($room['Expiration_Date'])) : '' ?>">
             </div>
 
             <button type="submit" name="update" class="btn btn-primary">บันทึกการเปลี่ยนแปลง</button>
             <button class="btn btn-warning float-end">
                 <a href="manage_rooms.php" style="color: white; text-decoration: none;">กลับไปที่หน้าจัดการห้อง</a>
+            </button>
         </form>
-
-
     </div>
 
     <!-- Footer -->

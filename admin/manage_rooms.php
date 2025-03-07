@@ -1,9 +1,8 @@
 <?php
-include("../config/session.php");
+// เริ่ม session และเชื่อมต่อฐานข้อมูล
+session_start();
 include("../config/database.php");
 
-// ดึงข้อมูลห้องพัก
-$result = $conn->query("SELECT * FROM rooms");
 // ตรวจสอบว่าผู้ใช้ล็อกอินอยู่หรือไม่
 if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
@@ -20,7 +19,15 @@ if (isset($_SESSION['user_id'])) {
 } else {
     $full_name = 'Guest'; // หากไม่ได้ล็อกอินให้แสดง 'Guest'
 }
+
+// ดึงข้อมูลห้องพักจากฐานข้อมูล
+$result = $conn->query("
+    SELECT r.*, u.full_name as tenant_name 
+    FROM rooms r 
+    LEFT JOIN users u ON r.tenant_id = u.id
+");
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -38,10 +45,7 @@ if (isset($_SESSION['user_id'])) {
 
 <body>
     <!-- Sidebar -->
-    <?php
-    include "../assets/assets/admin_sidebar.php";
-    ?>
-
+    <?php include "../assets/assets/admin_sidebar.php"; ?>
 
     <!-- Content -->
     <div class="content">
@@ -62,8 +66,8 @@ if (isset($_SESSION['user_id'])) {
             <tbody>
                 <?php while ($row = $result->fetch_assoc()) { ?>
                 <tr>
-                    <td><?= $row["room_number"] ?></td>
-                    <td><?= $row["type"] ? $row["type"] : 'ไม่มีข้อมูล' ?></td>
+                    <td><?= htmlspecialchars($row["room_number"]) ?></td>
+                    <td><?= htmlspecialchars($row["type"] ?? 'ไม่มีข้อมูล') ?></td>
                     <td><?= number_format($row["price"], 2) ?> บาท</td>
                     <td>
                         <?php
@@ -72,47 +76,27 @@ if (isset($_SESSION['user_id'])) {
                                 'reserved' => 'ซ่อมแซม',
                                 'occupied' => 'มีผู้เช่า'
                             ];
-                            echo $status_labels[$row['status']] ?? 'ไม่ทราบสถานะ';
+                            echo htmlspecialchars($status_labels[$row['status']] ?? 'ไม่ทราบสถานะ');
                             ?>
                     </td>
+                    <td><?= htmlspecialchars($row["tenant_name"] ?? 'ไม่มีผู้เช่า') ?></td>
+                    <td><?= $row["Date_of_Stay"] ? date('d/m/Y', strtotime($row["Date_of_Stay"])) : '-' ?></td>
+                    <td><?= $row["Expiration_Date"] ? date('d/m/Y', strtotime($row["Expiration_Date"])) : '-' ?></td>
                     <td>
-                        <?php
-                            if (!empty($row["tenant_id"])) {
-                                $tenant_id = $row["tenant_id"];
-                                $tenant_result = $conn->query("SELECT full_name FROM users WHERE id = '$tenant_id'");
-                                $tenant = $tenant_result->fetch_assoc();
-                                echo $tenant ? $tenant["full_name"] : 'ไม่มีผู้เช่า';
-                            } else {
-                                echo 'ไม่มีผู้เช่า';
-                            }
-                            ?>
+                        <a href="edit_room.php?id=<?= $row["id"] ?>" class="btn btn-warning">แก้ไข</a>
                     </td>
-                    <td><?= $row["Date of Stay"] ? date('d/m/Y', strtotime($row["Date of Stay"])) : '-' ?></td>
-                    <td><?= $row["Expiration Date"] ? date('d/m/Y', strtotime($row["Expiration Date"])) : '-' ?></td>
-                    <td><a href="edit_room.php?id=<?= $row["id"] ?>" class="btn btn-warning">แก้ไข</a></td>
                 </tr>
                 <?php } ?>
             </tbody>
         </table>
     </div>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
 
     <!-- Footer -->
     <div class="footer">
-        <p>&copy; 2023 Your Company. All rights reserved. | <a href="#">Privacy Policy</a> | <a href="#">Terms of
-                Service</a></p>
+        <p>&copy; 2023 Your Company. All rights reserved. |
+            <a href="#">Privacy Policy</a> |
+            <a href="#">Terms of Service</a>
+        </p>
     </div>
 </body>
 
